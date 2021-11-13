@@ -8,6 +8,7 @@ class TrogonObject:
 	BOOL = 3
 	FUNCTION = 4
 	TABLE = 5
+	TYPE = 6
 
 	def unary_minus(self):
 		raise RuntimeException(
@@ -162,7 +163,7 @@ class TrogonNumber(TrogonObject):
 		elif o == TrogonBool:
 			return TrogonTrue if self.value != 0 else TrogonFalse
 
-		return TrogonObject.to(o)
+		return TrogonObject.to(self, o)
 
 	def __init__(self, value): # TODO: check if value is int/float
 		self.value = value
@@ -343,11 +344,35 @@ class TrogonTableFunction(TrogonCallable):
 		self.arity = 0
 
 
+class TrogonType(TrogonObject):
+	type = TrogonObject.TYPE
+
+	def to(self, o):
+		if o == TrogonType:
+			return self
+
+		elif o == TrogonBool:
+			return TrogonTrue
+
+		return TrogonObject.to(self, o)
+
+	def __init__(self, value):
+		self.value = value
+
+TrogonTypeType = TrogonType(TrogonType)
+TrogonBoolType = TrogonType(TrogonBool)
+TrogonStringType = TrogonType(TrogonString)
+TrogonNumberType = TrogonType(TrogonNumber)
+TrogonNullTypeType = TrogonType(TrogonNullType)
+TrogonFunctionType = TrogonType(TrogonFunction)
+
+
 typename = {
 	TrogonObject.NULL: 'nulltype',
 	TrogonObject.NUMBER: 'number',
 	TrogonObject.STRING: 'string',
 	TrogonObject.TABLE: 'table',
 	TrogonObject.BOOL: 'bool',
-	TrogonObject.FUNCTION: 'function'
+	TrogonObject.FUNCTION: 'function',
+	TrogonObject.TYPE: 'type'
 }

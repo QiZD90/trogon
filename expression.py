@@ -13,6 +13,7 @@ class Expression:
 	IF = 6
 	CALL = 7
 	SUBSCRIPTION = 8
+	CAST = 9
 
 	def evaluate(self):
 		return None
@@ -39,6 +40,8 @@ class LiteralExpression(Expression):
 			self.value = TrogonNumber(value)
 		elif isinstance(value, bool):
 			self.value = TrogonBool(value)
+		elif isinstance(value, TrogonType):
+			self.value = TrogonType(value.value)
 		else:
 			self.value = TrogonNull
 
@@ -109,6 +112,19 @@ class SubscriptionExpression(LvalueExpression):
 
 	def __repr__(self):
 		return f'(SUBSCR {self.expression} {self.index})'
+
+
+class CastExpression(Expression):
+	def evaluate(self):
+		return self.left.evaluate().to(self.right.evaluate().value)
+
+	def __init__(self, left, right):
+		self.type = Expression.CAST
+		self.left = left
+		self.right = right
+
+	def __repr__(self):
+		return f'(CAST {self.left} {self.right})'
 
 
 class CallExpression(Expression):
@@ -260,6 +276,7 @@ class BlockExpression(Expression):
 	def __repr__(self):
 		return f'(BLOCK {self.statements} ->{self.expression})'
 
+
 class IfExpression(Expression):
 	def evaluate(self):
 		if self.condition.evaluate().to(TrogonBool).value == True:
@@ -275,6 +292,7 @@ class IfExpression(Expression):
 
 	def __repr__(self):
 		return f'(IF {self.condition} {self.true_block} {self.else_block})'
+
 
 class FunctionDeclarationExpression(Expression):
 	def evaluate(self):

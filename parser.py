@@ -1,6 +1,7 @@
 from expression import *
 from statement import *
 from state import *
+from lexer import *
 
 class ParseException(Exception):
 	pass
@@ -8,7 +9,7 @@ class ParseException(Exception):
 class Parser:
 	final_tokentypes = [
 		Token.STRING_LITERAL, Token.NUMBER_LITERAL,
-		Token.TRUE, Token.FALSE, Token.NULL]
+		Token.TRUE, Token.FALSE, Token.NULL] + Lexer.type_tokentypes
 
 	expression_with_block_predicate = [Token.IF, Token.LEFT_BRACE, Token.FUNCTION]
 
@@ -73,9 +74,7 @@ class Parser:
 		expression = self.final()
 
 		while self.match(Token.LEFT_BRACKET):
-			print('>',expression)
 			expression = SubscriptionExpression(expression, self.expression())
-			print('<',expression)
 			self.expect(Token.RIGHT_BRACKET, 'Expected ]')
 
 		return expression
@@ -104,14 +103,15 @@ class Parser:
 
 		return self.call()
 
-	#TODO:!!!!!
+	# TODO: we should be able to distinguish between `function` as a typename
+	# and function as a function declaration
 	def cast(self):
 		expression = self.unary()
-		return expression
 
-		if self.match(Token.AS):
-			
-			return CastExpression(expression,)
+		while self.match(Token.AS):
+			expression = CastExpression(expression, self.unary())
+
+		return expression
 
 	def factor(self):
 		expression = self.cast()

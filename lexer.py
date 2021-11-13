@@ -1,4 +1,5 @@
 import string
+import variables
 
 class Token:
 	EOF = 'EOF' # 0
@@ -57,6 +58,10 @@ class Token:
 	OR = 'OR'#93
 	IN = 'IN'
 	AS = 'AS'
+	BOOL = 'BOOL'
+	STRING = 'STRING'
+	NUMBER = 'NUMBER'
+	NULLTYPE = 'NULLTYPE'
 
 	def __init__(self, type, line, value=None):
 		self.type = type
@@ -90,12 +95,19 @@ class Lexer:
 		'while': Token.WHILE, 'null': Token.NULL, 'true': Token.TRUE,
 		'false': Token.FALSE, 'function': Token.FUNCTION, 'return': Token.RETURN,
 		'let': Token.LET, 'not': Token.NOT, 'and': Token.AND,
-		'or': Token.OR, 'in': Token.IN, 'as': Token.AS
+		'or': Token.OR, 'in': Token.IN, 'as': Token.AS,
+		'bool': Token.BOOL, 'string': Token.STRING, 'number': Token.NUMBER,
+		'nulltype': Token.NULLTYPE
 	}
 
 	keywords_values = {
-		'true': True, 'false': False, 'null': None
+		'true': True, 'false': False, 'null': None,
+		'type': variables.TrogonTypeType, 'bool': variables.TrogonBoolType,
+		'string': variables.TrogonStringType, 'number': variables.TrogonNumberType,
+		'nulltype': variables.TrogonNullTypeType
 	}
+
+	type_tokentypes = [Token.BOOL, Token.NULLTYPE, Token.NUMBER, Token.STRING]
 
 	identifier_start = string.ascii_letters + '_'
 	identifier_chars = identifier_start + string.digits
