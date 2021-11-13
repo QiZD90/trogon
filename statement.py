@@ -106,7 +106,6 @@ class ForStatement(Statement):
 		self.block = block
 		self.has_let = has_let
 
-	# TODO:
 	def __repr__(self):
 		return f'(FOR {self.lvalue.name}:={self.left_bound} to {self.right_bound} {self.block})'
 

@@ -188,7 +188,8 @@ class BinaryExpression(Expression):
 		Token.SHR_EQUAL: assign(lambda x, y: x.shr(y)),
 
 		Token.EQUAL_EQUAL: lambda x, y: x.equal(y),
-		Token.BANG_EQUAL: lambda x, y: not x.equal(y),
+		Token.BANG_EQUAL: lambda x, y:
+			TrogonFalse if x.equal(y) == TrogonTrue else TrogonTrue,
 
 		Token.GREATER: lambda x, y: x.greater(y),
 		Token.LESS: lambda x, y: x.less(y),

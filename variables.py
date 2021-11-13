@@ -221,7 +221,7 @@ class TrogonString(TrogonObject):
 		else:
 			self.value[index.value] = value.value[0]
 
-		return TrogonString(self.value[index.value])
+		return self
 
 	# TODO: == > < !!!!
 
@@ -245,21 +245,39 @@ class TrogonString(TrogonObject):
 class TrogonTable(TrogonObject):
 	type = TrogonObject.TABLE
 
+	def subscript(self, index):
+		# TODO: O(n) lookup time defeats the purpose of a table
+		for key in self.value.keys():
+			if key.equal(index).value:
+				return self.value[key]
+
+		return TrogonNull
+
+	def subscript_assign(self, index, value):
+		self.value[index] = value
+		return self 
+
+	def equal(self, y):
+		if y.type != TrogonObject.TABLE:
+			return TrogonObject.equal(self, y)
+
+		return TrogonTrue if self.value == y.value else TrogonFalse
+
 	def to(self, o):
 		if o == TrogonTable:
 			return self
 
 		elif o == TrogonString:
-			return None
-			#f'\{","\}'
+			# TODO: recursive tables
+			return TrogonString('{' + ', '.join([f'{"".join(k.to(TrogonString).value)}: {"".join(v.to(TrogonString).value)}' for k, v in self.value.items()]) + '}')
 
 		elif o == TrogonBool:
 			return bool(self.value)
 
 		return TrogonObject.to(self, o)
 
-	def __init__(self, value):
-		pass
+	def __init__(self, value={}):
+		self.value = value
 
 
 class TrogonCallable(TrogonObject):
@@ -278,6 +296,9 @@ class TrogonCallable(TrogonObject):
 
 		elif o == TrogonBool:
 			return TrogonTrue
+
+		elif o == TrogonString:
+			return TrogonString('<function>')
 
 		return TrogonObject.to(self, o)
 
@@ -365,6 +386,7 @@ TrogonStringType = TrogonType(TrogonString)
 TrogonNumberType = TrogonType(TrogonNumber)
 TrogonNullTypeType = TrogonType(TrogonNullType)
 TrogonFunctionType = TrogonType(TrogonFunction)
+TrogonTableType = TrogonType(TrogonTable)
 
 
 typename = {

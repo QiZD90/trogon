@@ -1,13 +1,40 @@
-let x = 0;
+function new_cat() {
+	let cat = table();
+	cat['say'] = function() {
+		print('meow');
+	};
+	cat['breed'] = 'Siamese cat';
+	cat['age'] = 6;
 
-function gettype() {
-	x = x + 1;
-
-	if (x % 2 == 0) {
-		number
-	} else {
-		string
-	}
+	cat
 }
 
-print(input() as gettype() as gettype());
+function new_dog() {
+	let dog = table();
+	dog['say'] = function() { print('woof'); };
+	dog['breed'] = 'Labrador';
+	dog['age'] = 4;
+
+	dog
+}
+
+print('Choose an animal (cat/dog): ');
+let choice = input();
+
+while choice != 'cat' and choice != 'dog' {
+	print('Choose an animal (cat/dog): ');
+	choice = input();
+}
+
+let animal = new_cat();
+
+if choice == 'cat' {
+	print('New cat is being produced on the cat factory!!');
+	animal = new_cat();
+} else {
+	print('New dog is being produced on the dog factory!!');
+	animal = new_dog();
+}
+
+print(animal['breed'] + ' aged ' + animal['age'] as string + ' says:');
+animal['say']();

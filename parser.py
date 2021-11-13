@@ -178,7 +178,7 @@ class Parser:
 	def assign(self):
 		expression = self.logicalterm()
 		if expression and self.match(Token.EQUAL):
-			expression = BinaryExpression(Token.EQUAL, expression, self.assign())
+			expression = BinaryExpression(Token.EQUAL, expression, self.expression())
 
 		return expression
 
@@ -246,7 +246,10 @@ class Parser:
 					expression = obj
 					break
 				else:
-					obj = ExpressionStatement(obj)
+					if isinstance(obj, FunctionDeclarationExpression):
+						obj = FunctionDeclarationStatement(obj)
+					else:
+						obj = ExpressionStatement(obj) 
 
 			statements.append(obj)
 
