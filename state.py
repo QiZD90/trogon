@@ -1,6 +1,11 @@
 import copy
 from runtime import RuntimeException
+
 current_state = None
+
+# TODO: can't place it in `variables.py` due to circular import
+types_passed_by_value = [0, 1, 2, 3, 6]
+#[TrogonType, TrogonBool, TrogonString, TrogonNumber, TrogonNulltype]
 
 class State:
 	def get_state():
@@ -17,11 +22,14 @@ class State:
 		global current_state
 		current_state = current_state.parent
 
-	def register(self, name, value):
+	def register(self, name, value, from_literal=False):
 		if name in self.variables:
 			raise RuntimeException(f'Tried to redefine variable {name}')
 
-		self.variables[name] = copy.deepcopy(value)
+		if value.type in types_passed_by_value or from_literal:
+			self.variables[name] = copy.deepcopy(value)
+		else:
+			self.variables[name] = copy.copy(value)
 
 	def get(self, name):
 		head = self
@@ -33,7 +41,7 @@ class State:
 
 		return head.variables[name]
 
-	def set(self, name, value):
+	def set(self, name, value, from_literal=False):
 		head = self
 		while head and name not in head.variables:
 			head = head.parent
@@ -41,7 +49,10 @@ class State:
 		if not head or name not in head.variables:
 			raise RuntimeException(f'Implicit variable definition is not allowed')
 
-		head.variables[name] = copy.deepcopy(value)
+		if value.type in types_passed_by_value or from_literal:
+			head.variables[name] = copy.deepcopy(value)
+		else:
+			head.variables[name] = copy.copy(value)
 
 	def debug():
 		state = State.get_state()

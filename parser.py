@@ -70,38 +70,37 @@ class Parser:
 			self.expect(Token.RIGHT_PAREN, 'Expected )')
 			return expression
 
-	def subscription(self):
+	def call_path_sub(self):
 		expression = self.final()
 
-		while self.match(Token.LEFT_BRACKET):
-			expression = SubscriptionExpression(expression, self.expression())
-			self.expect(Token.RIGHT_BRACKET, 'Expected ]')
+		while self.next_is((Token.LEFT_PAREN, Token.DOT, Token.LEFT_BRACKET)):
+			token = self.next()
+
+			if token.type == Token.LEFT_PAREN:
+				arguments = []
+				while not self.next_is(Token.RIGHT_PAREN):
+					arguments.append(self.expression())
+
+					if not self.next_is(Token.RIGHT_PAREN):
+						self.expect(Token.COMMA, 'Expected ,')
+
+				self.expect(Token.RIGHT_PAREN, 'Expected )')
+				expression = CallExpression(expression, arguments)
+
+			elif token.type == Token.DOT:
+				expression = DotExpression(expression, self.final())
+
+			elif token.type == Token.LEFT_BRACKET:
+				expression = SubscriptionExpression(expression, self.expression())
+				self.expect(Token.RIGHT_BRACKET, 'Expected ]')
 
 		return expression
-			
-
-	def call(self):
-		expression = self.subscription()
-
-		while self.match(Token.LEFT_PAREN):
-			arguments = []
-			while not self.next_is(Token.RIGHT_PAREN):
-				arguments.append(self.expression())
-
-				if not self.next_is(Token.RIGHT_PAREN):
-					self.expect(Token.COMMA, 'Expected ,')
-
-			self.expect(Token.RIGHT_PAREN, 'Expected )')
-			expression = CallExpression(expression, arguments)
-
-		return expression
-
 
 	def unary(self):
 		if self.match(Token.MINUS):
 			return UnaryExpression(Token.MINUS, self.final())
 
-		return self.call()
+		return self.call_path_sub()
 
 	# TODO: we should be able to distinguish between `function` as a typename
 	# and function as a function declaration

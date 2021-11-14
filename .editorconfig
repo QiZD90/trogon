@@ -9,3 +9,7 @@ charset = utf-8
 indent_style = tab
 tab_width = 2
 trim_trailing_whitespace = true
+
+[*.tr]
+indent_style = tab
+tab_width = 2

@@ -82,7 +82,10 @@ class VariableExpression(LvalueExpression):
 
 class DotExpression(LvalueExpression):
 	def evaluate(self):
-		return self.left.evaluate().dot(self.right.evaluate())
+		if not isinstance(self.right, VariableExpression):
+			raise RuntimeException('Expected VariableExpression!')
+
+		return self.left.evaluate().dot(self.right.name)
 
 	def assign(self, value):
 		# TODO:

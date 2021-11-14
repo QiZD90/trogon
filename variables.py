@@ -1,5 +1,6 @@
 from runtime import *
-from state import State
+from state import *
+import copy
 
 class TrogonObject:
 	NULL = 0
@@ -46,7 +47,7 @@ class TrogonObject:
 	mod = not_supported_error('%')
 	shl = not_supported_error('<<')
 	shr = not_supported_error('>>')
-	equal = not_supported_error('==')
+	equal = lambda x, y: TrogonFalse
 	greater = not_supported_error('>')
 	less = not_supported_error('<')
 
@@ -113,7 +114,8 @@ TrogonTrue, TrogonFalse = TrogonBool(True), TrogonBool(False)
 class TrogonNumber(TrogonObject):
 	type = TrogonObject.NUMBER
 
-	unary_minus = lambda x: TrogonNumber(-self.value)
+	def unary_minus(self):
+		return TrogonNumber(-self.value)
 
 	def if_second_operand_is_number(f, operator):
 		def inner(x, y):
@@ -124,6 +126,9 @@ class TrogonNumber(TrogonObject):
 			return TrogonNumber(f(x.value, y.value))
 
 		return inner
+
+	def dot(self, argument):
+		return TrogonObject.dot(self, argument)
 
 
 	add = if_second_operand_is_number(lambda x, y: x + y, '+')
@@ -172,6 +177,12 @@ class TrogonNumber(TrogonObject):
 class TrogonString(TrogonObject):
 	type = TrogonObject.STRING
 
+	def dot(self, argument):
+		if argument == 'length':
+			return TrogonCallable(0, lambda _: TrogonNumber(len(self.value)))
+
+		return TrogonObject.dot(self, argument)
+
 	def equal(self, y):
 		if y.type != TrogonObject.STRING:
 			return TrogonObject.equal(self, y)
@@ -219,7 +230,7 @@ class TrogonString(TrogonObject):
 		if not value.value:
 			del self.value[index.value]
 		else:
-			self.value[index.value] = value.value[0]
+			self.value[index.value] = str(value.value[0])
 
 		return self
 
@@ -245,6 +256,28 @@ class TrogonString(TrogonObject):
 class TrogonTable(TrogonObject):
 	type = TrogonObject.TABLE
 
+	def clear(self):
+		self.value.clear()
+		return TrogonNull
+
+	def remove(self, arguments):
+		index = arguments[0]
+
+		for key in self.value.keys():
+			if key.equal(index).value:
+				del self.value[key]
+				break
+
+		return TrogonNull
+
+	def dot(self, argument):
+		if argument == 'clear':
+			return TrogonCallable(0, lambda _: self.clear())
+		if argument == 'remove':
+			return TrogonCallable(1, lambda x: self.remove(x))
+
+		TrogonObject.dot(self, argument)
+
 	def subscript(self, index):
 		# TODO: O(n) lookup time defeats the purpose of a table
 		for key in self.value.keys():
@@ -254,7 +287,8 @@ class TrogonTable(TrogonObject):
 		return TrogonNull
 
 	def subscript_assign(self, index, value):
-		self.value[index] = value
+		v = copy.deepcopy(value) if value.type in types_passed_by_value else copy.copy(value)
+		self.value[index] = v
 		return self 
 
 	def equal(self, y):
@@ -272,7 +306,7 @@ class TrogonTable(TrogonObject):
 			return TrogonString('{' + ', '.join([f'{"".join(k.to(TrogonString).value)}: {"".join(v.to(TrogonString).value)}' for k, v in self.value.items()]) + '}')
 
 		elif o == TrogonBool:
-			return bool(self.value)
+			return TrogonBool(self.value)
 
 		return TrogonObject.to(self, o)
 
@@ -284,11 +318,17 @@ class TrogonCallable(TrogonObject):
 	type = TrogonObject.FUNCTION
 	value = None
 
+	def check_arity(self, arguments):
+		if len(arguments) != self.arity:
+			raise RuntimeException(
+				f'Expected {self.arity} arguments, got {len(arguments)}')
+
 	def call(self, arguments):
 		if len(arguments) != self.arity:
 			raise RuntimeException(
 				f'Expected {self.arity} arguments, got {len(arguments)}')
-		return TrogonNull
+
+		return self.function([x.evaluate() for x in arguments])
 
 	def to(self, o):
 		if o == TrogonCallable:
@@ -302,15 +342,17 @@ class TrogonCallable(TrogonObject):
 
 		return TrogonObject.to(self, o)
 
-	def __init__(self, arity):
+	def __init__(self, arity, function):
 		self.arity = arity
+		self.function = function
 
 
 class TrogonPrintFunction(TrogonCallable):
 	type = TrogonObject.FUNCTION
 
 	def call(self, arguments):
-		TrogonCallable.call(self, arguments)
+		self.check_arity(arguments)
+
 		print(''.join(arguments[0].evaluate().to(TrogonString).value))
 		return TrogonNull
 
@@ -322,7 +364,7 @@ class TrogonInputFunction(TrogonCallable):
 	type = TrogonObject.FUNCTION
 
 	def call(self, arguments):
-		TrogonCallable.call(self, arguments)
+		self.check_arity(arguments)
 		return TrogonString(input())
 
 	def __init__(self):
@@ -333,7 +375,7 @@ class TrogonFunction(TrogonCallable):
 	type = TrogonObject.FUNCTION
 
 	def call(self, arguments):
-		TrogonCallable.call(self, arguments)
+		self.check_arity(arguments)
 
 		state = State.begin()
 		for i, argname in enumerate(self.argnames):
@@ -358,8 +400,8 @@ class TrogonTableFunction(TrogonCallable):
 	type = TrogonObject.FUNCTION
 
 	def call(self, arguments):
-		TrogonCallable.call(self, arguments)
-		return TrogonTable()
+		self.check_arity(arguments)
+		return TrogonTable({})
 
 	def __init__(self):
 		self.arity = 0

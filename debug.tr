@@ -1,40 +1,34 @@
-function new_cat() {
-	let cat = table();
-	cat['say'] = function() {
-		print('meow');
-	};
-	cat['breed'] = 'Siamese cat';
-	cat['age'] = 6;
+let a = table();
+a[3] = 17;
 
-	cat
+let b = a;
+b[5] = 11;
+
+let c = table();
+c[11] = table();
+
+print(a);
+print(b);
+print(c);
+
+let s1 = 'abc';
+let s2 = s1;
+s2[0] = '8';
+print(s1);
+print(s2);
+
+let start = table();
+let iter = start;
+
+for let i in 0 .. 10 {
+	iter['value'] = i;
+	iter['child'] = table();
+	iter = iter['child'];	
 }
+print(start);
 
-function new_dog() {
-	let dog = table();
-	dog['say'] = function() { print('woof'); };
-	dog['breed'] = 'Labrador';
-	dog['age'] = 4;
 
-	dog
-}
-
-print('Choose an animal (cat/dog): ');
-let choice = input();
-
-while choice != 'cat' and choice != 'dog' {
-	print('Choose an animal (cat/dog): ');
-	choice = input();
-}
-
-let animal = new_cat();
-
-if choice == 'cat' {
-	print('New cat is being produced on the cat factory!!');
-	animal = new_cat();
-} else {
-	print('New dog is being produced on the dog factory!!');
-	animal = new_dog();
-}
-
-print(animal['breed'] + ' aged ' + animal['age'] as string + ' says:');
-animal['say']();
+iter = start['child']['child']['child']['child'];
+print(iter['value']);
+iter.clear();
+print(start);

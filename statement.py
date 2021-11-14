@@ -94,7 +94,7 @@ class ForStatement(Statement):
 
 			self.block.evaluate()
 
-			counter.value += (1 if self.right_bound.evaluate().greater(counter) else -1)
+			counter.value += (1 if self.right_bound.evaluate().greater(counter).value else -1)
 
 		state.end()
 
