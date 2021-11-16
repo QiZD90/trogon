@@ -1,34 +1,18 @@
-let a = table();
-a[3] = 17;
+function outer() {
+	let count = 0;
+	function inner() {
+		count = count + 1;
+		count
+	}
 
-let b = a;
-b[5] = 11;
-
-let c = table();
-c[11] = table();
-
-print(a);
-print(b);
-print(c);
-
-let s1 = 'abc';
-let s2 = s1;
-s2[0] = '8';
-print(s1);
-print(s2);
-
-let start = table();
-let iter = start;
-
-for let i in 0 .. 10 {
-	iter['value'] = i;
-	iter['child'] = table();
-	iter = iter['child'];	
+	inner
 }
-print(start);
 
+let counter = outer();
+print(counter());
+print(counter());
+print(counter());
 
-iter = start['child']['child']['child']['child'];
-print(iter['value']);
-iter.clear();
-print(start);
+let counter2 = outer();
+print(counter2());
+print(counter2());

@@ -12,14 +12,26 @@ class State:
 		global current_state
 		return current_state
 
+	def set_state(state):
+		global current_state
+		current_state = state
+
 	def begin(self=None):
 		global current_state
+
+		if self:
+			return State(self)
+
 		current_state = State(current_state)
 		return current_state
 
 	# TODO:
 	def end(self=None):
 		global current_state
+
+		if self:
+			return self.parent
+
 		current_state = current_state.parent
 
 	def register(self, name, value, from_literal=False):
@@ -54,8 +66,8 @@ class State:
 		else:
 			head.variables[name] = copy.copy(value)
 
-	def debug():
-		state = State.get_state()
+	def debug(self=None):
+		state = State.get_state() if not self else self
 		while state:
 			print({x: state.variables[x].value for x in state.variables}, end=' -> ')
 			state = state.parent

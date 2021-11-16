@@ -197,9 +197,9 @@ class BinaryExpression(Expression):
 		Token.GREATER: lambda x, y: x.greater(y),
 		Token.LESS: lambda x, y: x.less(y),
 		Token.GREATER_EQUAL: 
-			lambda x, y: x.equal(y) or x.greater(y),
+			lambda x, y: TrogonBool(x.equal(y).value or x.greater(y).value),
 		Token.LESS_EQUAL:
-			lambda x, y: x.equal(y) or x.less(y),
+			lambda x, y: TrogonBool(x.equal(y).value or x.less(y).value),
 	}
 
 

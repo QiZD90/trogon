@@ -1,6 +1,7 @@
 from runtime import *
 from state import *
 import copy
+import random
 
 class TrogonObject:
 	NULL = 0
@@ -275,6 +276,8 @@ class TrogonTable(TrogonObject):
 			return TrogonCallable(0, lambda _: self.clear())
 		if argument == 'remove':
 			return TrogonCallable(1, lambda x: self.remove(x))
+		if argument == 'length':
+			return TrogonCallable(0, lambda _: len(self.value))
 
 		TrogonObject.dot(self, argument)
 
@@ -288,7 +291,12 @@ class TrogonTable(TrogonObject):
 
 	def subscript_assign(self, index, value):
 		v = copy.deepcopy(value) if value.type in types_passed_by_value else copy.copy(value)
-		self.value[index] = v
+		for key in self.value.keys():
+			if key.equal(index).value:
+				self.value[key] = v
+				break
+		else:
+			self.value[index] = v
 		return self 
 
 	def equal(self, y):
@@ -359,7 +367,6 @@ class TrogonPrintFunction(TrogonCallable):
 	def __init__(self):
 		self.arity = 1
 
-
 class TrogonInputFunction(TrogonCallable):
 	type = TrogonObject.FUNCTION
 
@@ -377,15 +384,19 @@ class TrogonFunction(TrogonCallable):
 	def call(self, arguments):
 		self.check_arity(arguments)
 
-		state = State.begin()
+		state = self.state.begin()
+		state_previous = State.get_state()
+		State.set_state(state)
+
 		for i, argname in enumerate(self.argnames):
 			state.register(argname, arguments[i].evaluate())
-
-		if self.name:
+		
+		if self.name and self.name not in self.argnames:
 			state.register(self.name, self)
 
 		result = self.block.evaluate()
 		state.end()
+		State.set_state(state_previous)
 
 		return result
 
@@ -394,6 +405,7 @@ class TrogonFunction(TrogonCallable):
 		self.name = name
 		self.argnames = argnames
 		self.block = block
+		self.state = State.get_state()
 
 
 class TrogonTableFunction(TrogonCallable):
@@ -405,6 +417,23 @@ class TrogonTableFunction(TrogonCallable):
 
 	def __init__(self):
 		self.arity = 0
+
+
+class TrogonRandomFunction(TrogonCallable):
+	type = TrogonObject.FUNCTION
+
+	def call(self, arguments):
+		self.check_arity(arguments)
+		x, y = [i.evaluate() for i in arguments]
+
+		if x.type != TrogonObject.NUMBER or y.type != TrogonObject.NUMBER or\
+		   not isinstance(x.value, int) or not isinstance(y.value, int):
+			raise RuntimeException('Random takes 2 integer arguments')
+
+		return TrogonNumber(random.randrange(x.value, y.value))
+
+	def __init__(self):
+		self.arity = 2
 
 
 class TrogonType(TrogonObject):
