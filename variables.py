@@ -106,7 +106,7 @@ class TrogonBool(TrogonObject):
 
 		return TrogonObject.to(self, o)
 
-	def __init__(self, value): # TODO: check if value is bool :P
+	def __init__(self, value=False): # TODO: check if value is bool :P
 		self.value = value
 	
 TrogonTrue, TrogonFalse = TrogonBool(True), TrogonBool(False)
@@ -171,7 +171,7 @@ class TrogonNumber(TrogonObject):
 
 		return TrogonObject.to(self, o)
 
-	def __init__(self, value): # TODO: check if value is int/float
+	def __init__(self, value=0): # TODO: check if value is int/float
 		self.value = value
 
 
@@ -250,8 +250,8 @@ class TrogonString(TrogonObject):
 
 		return TrogonObject.to(self, o)
 
-	def __init__(self, value):
-		self.value = [x for x in value]
+	def __init__(self, value=None):
+		self.value = [x for x in value] if value else []
 
 
 class TrogonTable(TrogonObject):
@@ -303,7 +303,18 @@ class TrogonTable(TrogonObject):
 		if y.type != TrogonObject.TABLE:
 			return TrogonObject.equal(self, y)
 
-		return TrogonTrue if self.value == y.value else TrogonFalse
+		if len(self.value) != len(y.value):
+			return TrogonFalse
+
+		# TODO: wow this is straight up awful
+		for key, value in self.value.items():
+			for key2, value2 in y.value.items():
+				if key.equal(key2).value and value.equal(value2).value:
+					break
+			else:
+				return TrogonFalse
+
+		return TrogonTrue
 
 	def to(self, o):
 		if o == TrogonTable:
@@ -318,8 +329,8 @@ class TrogonTable(TrogonObject):
 
 		return TrogonObject.to(self, o)
 
-	def __init__(self, value={}):
-		self.value = value
+	def __init__(self):
+		self.value = {}
 
 
 class TrogonCallable(TrogonObject):
@@ -358,6 +369,9 @@ class TrogonCallable(TrogonObject):
 class TrogonPrintFunction(TrogonCallable):
 	type = TrogonObject.FUNCTION
 
+	def equal(self, y):
+		return TrogonTrue if isinstance(y, TrogonPrintFunction) else TrogonFalse
+
 	def call(self, arguments):
 		self.check_arity(arguments)
 
@@ -370,6 +384,9 @@ class TrogonPrintFunction(TrogonCallable):
 class TrogonInputFunction(TrogonCallable):
 	type = TrogonObject.FUNCTION
 
+	def equal(self, y):
+		return TrogonTrue if isinstance(y, TrogonInputFunction) else TrogonFalse
+
 	def call(self, arguments):
 		self.check_arity(arguments)
 		return TrogonString(input())
@@ -380,6 +397,12 @@ class TrogonInputFunction(TrogonCallable):
 
 class TrogonFunction(TrogonCallable):
 	type = TrogonObject.FUNCTION
+
+	def equal(self, y):
+		if not isinstance(y, TrogonFunction):
+			return TrogonFalse
+
+		return TrogonBool(self.arity == y.arity and self.block == y.block)
 
 	def call(self, arguments):
 		self.check_arity(arguments)
@@ -414,24 +437,16 @@ class TrogonFunction(TrogonCallable):
 		self.state = State.get_state()
 
 
-class TrogonTableFunction(TrogonCallable):
-	type = TrogonObject.FUNCTION
-
-	def call(self, arguments):
-		self.check_arity(arguments)
-		return TrogonTable({})
-
-	def __init__(self):
-		self.arity = 0
-
-
 class TrogonRandomFunction(TrogonCallable):
 	type = TrogonObject.FUNCTION
+
+	def equal(self, y):
+		return TrogonTrue if isinstance(y, TrogonRandomFunction) else TrogonFalse
 
 	def call(self, arguments):
 		self.check_arity(arguments)
 		x, y = arguments
-		
+
 		if x.type != TrogonObject.NUMBER or y.type != TrogonObject.NUMBER or\
 		   not isinstance(x.value, int) or not isinstance(y.value, int):
 			raise RuntimeException('Random takes 2 integer arguments')
@@ -442,8 +457,18 @@ class TrogonRandomFunction(TrogonCallable):
 		self.arity = 2
 
 
-class TrogonType(TrogonObject):
+class TrogonType(TrogonCallable):
 	type = TrogonObject.TYPE
+
+	def equal(self, y):
+		if not isinstance(y, TrogonType):
+			return TrogonFalse
+
+		return TrogonTrue if self.value == y.value else TrogonFalse
+
+	def call(self, arguments):
+		self.check_arity(arguments)
+		return self.value()
 
 	def to(self, o):
 		if o == TrogonType:
@@ -456,6 +481,7 @@ class TrogonType(TrogonObject):
 
 	def __init__(self, value):
 		self.value = value
+		self.arity = 0
 
 TrogonTypeType = TrogonType(TrogonType)
 TrogonBoolType = TrogonType(TrogonBool)

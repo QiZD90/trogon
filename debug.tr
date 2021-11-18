@@ -1,8 +1,28 @@
-let i = table();
-i['c'] = 3;
+let t = table();
+t['1'] = 11;
 
-for i['c'] in 0..11 {
-	print(i['c']);	
-}
+let t2 = table{
+	'1': 11
+};
 
-print(i);
+let t3 = table{};
+print(t == t2);
+print(t == t3);
+print('');
+
+function a() {}
+function b() {}
+
+print(a == a);
+print(a == b);
+print('');
+
+print(number == number);
+print(table == number);
+print('');
+
+let t4 = table{'f': a};
+let t5 = table{'f': a};
+let t6 = table{'f': b};
+print(t4 == t5);
+print(t4 == t6);

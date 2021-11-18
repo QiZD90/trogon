@@ -9,7 +9,7 @@ function factr(n) {
 	# functions work the same way
 	if n <= 1 { 1 } else { n * factr(n - 1) }
 }
-print(factr(10));;
+print(factr(10));
 
 
 # ===========================
@@ -20,7 +20,7 @@ for let i in 1 .. 20 {
 	let fizzbuzz =
 		(if i % 3 == 0 { 'Fizz' } else { '' }) + (if i % 5 == 0 { 'Buzz' } else { '' });
 
-	if (fizzbuzz) {
+	if fizzbuzz {
 		print(fizzbuzz);
 	} else {
 		print(i);
@@ -45,21 +45,21 @@ print(reverse);
 #         Table test
 # ============================
 function new_cat() {
-	let cat = table();
-	cat['say'] = function() {
-		print('meow');
+	let cat = table {
+		'say': function() { print('meow'); },
+		'breed': 'Siamese cat',
+		'age': 6
 	};
-	cat['breed'] = 'Siamese cat';
-	cat['age'] = 6;
-
+	
 	cat
 }
 
 function new_dog() {
-	let dog = table();
-	dog['say'] = function() { print('woof'); };
-	dog['breed'] = 'Labrador';
-	dog['age'] = 4;
+	let dog = table {
+		'say': function() { print('woof'); },
+		'breed': 'Labrador',
+		'age': 4, # Trailing comma <3
+	};
 
 	dog
 }

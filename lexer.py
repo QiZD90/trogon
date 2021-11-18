@@ -11,6 +11,7 @@ class Token:
 	LEFT_BRACKET = 'LEFT_BRACKET'
 	RIGHT_BRACKET = 'RIGHT_BRACKET'
 	SEMICOLON = 'SEMICOLON'#5
+	COLON = 'COLON'
 	COMMA = 'COMMA'
 	DOT = 'DOT'
 	DOUBLE_DOT = 'DOUBLE_DOT'
@@ -64,6 +65,7 @@ class Token:
 	STRING = 'STRING'
 	NUMBER = 'NUMBER'
 	NULLTYPE = 'NULLTYPE'
+	TABLE = 'TABLE'
 
 	def __init__(self, type, line, value=None):
 		self.type = type
@@ -76,6 +78,7 @@ class Token:
 
 class LexingException(Exception):
 	pass
+
 
 class Lexer:
 	radix_digits = {
@@ -99,17 +102,18 @@ class Lexer:
 		'let': Token.LET, 'not': Token.NOT, 'and': Token.AND,
 		'or': Token.OR, 'in': Token.IN, 'as': Token.AS,
 		'bool': Token.BOOL, 'string': Token.STRING, 'number': Token.NUMBER,
-		'nulltype': Token.NULLTYPE, 'break': Token.BREAK, 'continue': Token.CONTINUE
+		'nulltype': Token.NULLTYPE, 'break': Token.BREAK, 'continue': Token.CONTINUE,
+		'table': Token.TABLE
 	}
 
 	keywords_values = {
 		'true': True, 'false': False, 'null': None,
 		'type': variables.TrogonTypeType, 'bool': variables.TrogonBoolType,
 		'string': variables.TrogonStringType, 'number': variables.TrogonNumberType,
-		'nulltype': variables.TrogonNullTypeType
+		'nulltype': variables.TrogonNullTypeType, 'table': variables.TrogonTableType
 	}
 
-	type_tokentypes = [Token.BOOL, Token.NULLTYPE, Token.NUMBER, Token.STRING]
+	type_tokentypes = [Token.BOOL, Token.NULLTYPE, Token.NUMBER, Token.STRING, Token.TABLE]
 
 	identifier_start = string.ascii_letters + '_'
 	identifier_chars = identifier_start + string.digits
@@ -160,6 +164,8 @@ class Lexer:
 				self.tokens.append(Token(Token.RIGHT_BRACKET, self.line))
 			elif c == ';':
 				self.tokens.append(Token(Token.SEMICOLON, self.line))
+			elif c == ':':
+				self.tokens.append(Token(Token.COLON, self.line))
 			elif c == ',':
 				self.tokens.append(Token(Token.COMMA, self.line))
 

@@ -50,6 +50,21 @@ class LiteralExpression(Expression):
 		return f'(LIT {str(self.value)})'
 
 
+class TableLiteralExpression(Expression):
+	def evaluate(self):
+		table = TrogonTable()
+		for k, v in self.arguments.items():
+			table.subscript_assign(k.evaluate(), v.evaluate())
+		return table
+
+	def __init__(self, arguments):
+		self.type = Expression.LITERAL
+		self.arguments = arguments
+
+	def __repr__(self):
+		return f'(LIT {self.arguments})'
+
+
 class LvalueExpression(Expression):
 	def evaluate(self):
 		return TrogonNull

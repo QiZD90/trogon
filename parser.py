@@ -27,6 +27,11 @@ class Parser:
 			return None
 		return self.tokens[self.pos]
 
+	def peek2(self):
+		if self.pos >= len(self.tokens) - 1:
+			return None
+		return self.tokens[self.pos + 1]
+
 	def next(self):
 		if self.pos >= len(self.tokens):
 			return None
@@ -60,6 +65,26 @@ class Parser:
 	# ==== Some actual AST parsing functions ====
 
 	def final(self):
+		if self.next_is(Token.TABLE)\
+		   and self.peek2() and self.peek2().type == Token.LEFT_BRACE:
+			self.next()
+			self.next()
+
+			arguments = []
+			while not self.next_is(Token.RIGHT_BRACE):
+				key = self.final()
+
+				self.expect(Token.COLON, 'Expected :')
+				value = self.expression()
+
+				if not self.next_is(Token.RIGHT_BRACE):
+					self.expect(Token.COMMA, 'Expected ,')
+
+				arguments.append((key, value))
+
+			self.expect(Token.RIGHT_BRACE, 'Expected }')
+			return TableLiteralExpression({k: v for (k, v) in arguments})
+			
 		if self.next_is(Parser.final_tokentypes):
 			return LiteralExpression(self.next().value)
 
