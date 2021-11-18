@@ -1,18 +1,43 @@
-function outer() {
-	let count = 0;
-	function inner() {
-		count = count + 1;
-		count
-	}
+for let i in 0 .. 4 {
+	for let j in 0 .. 20 {
+		if (i * 20 + j) % 2 != 0 {
+			continue;
+		}
 
-	inner
+		print(i * 20 + j);
+	}
 }
 
-let counter = outer();
-print(counter());
-print(counter());
-print(counter());
+for let i in 0 .. 10 {
+	let str = '          ';
+	if i % 2 != 0 {
+		continue;
+	}
 
-let counter2 = outer();
-print(counter2());
-print(counter2());
+	for let j in 0 .. 10 {
+		str[j] = '#';
+
+		if j >= i {
+			break;
+		}
+	}
+
+	print(str);
+}
+
+let f = function() {return 3; return 11; 77};
+print(f());
+
+function a() {
+	for let i in 0 .. 11 {
+		return 'xyz';
+	}
+}
+
+print(a());
+
+# Should raise an exception.
+# Should we be able to return from blocks like these? I dunno, but Rust
+# doesn't allow it. And you know how the saying goes:
+# "When in doubt, do everything like Rust does"
+let ccc = {return 7;};

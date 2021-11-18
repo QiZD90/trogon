@@ -1,6 +1,7 @@
 from state import State
 from lexer import Token
-from runtime import RuntimeException
+from statement import *
+from runtime import *
 from variables import *
 
 class Expression:
@@ -166,7 +167,7 @@ class BinaryExpression(Expression):
 			if x.type not in (Expression.LVALUE, Expression.SUBSCRIPTION):
 				raise RuntimeException('Expected lvalue!')
 
-			return x.assign(f(x, y) if f else y)
+			return x.assign(f(x.evaluate(), y) if f else y)
 
 		return inner
 
@@ -254,21 +255,28 @@ class LogicalExpression(Expression):
 
 class BlockExpression(Expression):
 	def evaluate(self):
-		result = TrogonNull
-		found_return = False
-
 		State.begin()
-		for s in self.statements:
-			#if s.type == Statement.RETURN:
-			#	result = s.expression.evaluate()
-			#	found_return = True
-			#	break
+		result = TrogonNull
 
-			s.interpret()
+		try:
+			for s in self.statements:
+				if s.type == Statement.RETURN:
+					result = s.expression.evaluate() if s.expression else TrogonNull
+					raise ReturnException(result)
 
-		if not found_return:
+				elif s.type == Statement.BREAK:
+					raise BreakException()
+
+				elif s.type == Statement.CONTINUE:
+					raise ContinueException()
+
+				else:
+					s.interpret()
+
 			result = self.expression.evaluate() if self.expression else TrogonNull
-		State.end()
+			
+		finally:
+			State.end()
 
 		return result
 

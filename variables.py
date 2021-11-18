@@ -394,9 +394,15 @@ class TrogonFunction(TrogonCallable):
 		if self.name and self.name not in self.argnames:
 			state.register(self.name, self)
 
-		result = self.block.evaluate()
-		state.end()
-		State.set_state(state_previous)
+		try:
+			result = self.block.evaluate()
+		except ReturnException as e:
+			result = e.value
+		except (ContinueException, BreakException) as e:
+			raise RuntimeException('Uncaught break or continue')
+		finally:
+			state.end()
+			State.set_state(state_previous)
 
 		return result
 

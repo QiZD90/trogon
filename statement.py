@@ -1,16 +1,17 @@
 from state import State
-from expression import *
+import expression as _expression
 from variables import *
 
 class Statement:
 	NULL = 0
 	EXPR = 1
 	LET = 2
-	PRINT = 3
 	WHILE = 4
 	FOR = 5
 	RETURN = 6
 	FUNCDECL = 7
+	BREAK = 8
+	CONTINUE = 9
 
 	def interpret(self):
 		pass
@@ -49,10 +50,6 @@ class LetStatement(Statement):
 		return f'(LET {self.name} {self.expression})'
 
 
-# TODO: rn it works different from any other language
-# and is just a way to return from a block early
-# but it's not very practical, because if you try to return with a condition
-# you just return from an if-statement branch block
 class ReturnStatement(Statement):
 	def interpret(self):
 		pass
@@ -65,10 +62,38 @@ class ReturnStatement(Statement):
 		return f'(RETURN {self.expression})'
 
 
+class BreakStatement(Statement):
+	def interpret(self):
+		pass
+
+	def __init__(self):
+		self.type = Statement.BREAK
+
+	def __repr__(self):
+		return f'(BREAK)'
+
+
+class ContinueStatement(Statement):
+	def interpret(self):
+		pass
+
+	def __init__(self):
+		self.type = Statement.CONTINUE
+
+	def __repr__(self):
+		return f'(CONTINUE)'
+
+
 class WhileStatement(Statement):
 	def interpret(self):
-		while self.condition.evaluate().to(TrogonBool).value == True:
-			self.block.evaluate()
+		try:
+			while self.condition.evaluate().to(TrogonBool).value == True:
+				try:
+					r = self.block.evaluate()
+				except ContinueException as e:
+					continue
+		except BreakException as e:
+			return
 
 	def __init__(self, condition, block):
 		self.type = Statement.WHILE
@@ -89,14 +114,24 @@ class ForStatement(Statement):
 			state.set(self.lvalue.name, self.left_bound.evaluate())
 
 		counter = state.get(self.lvalue.name)
-		while abs(counter.sub(self.right_bound.evaluate()).value) >= 1:
-			state.set(self.lvalue.name, counter)
+		try:
+			while abs(counter.sub(self.right_bound.evaluate()).value) >= 1:
+				state.set(self.lvalue.name, counter)
 
-			self.block.evaluate()
+				try:
+					r = self.block.evaluate()
+				except ContinueException as e:
+					pass
 
-			counter.value += (1 if self.right_bound.evaluate().greater(counter).value else -1)
+				if self.right_bound.evaluate().greater(counter).value:
+					counter.value += 1
+				else:
+					counter.value -= 1
+		except BreakException as e:
+			pass
 
-		state.end()
+		finally:
+			state.end()
 
 	def __init__(self, lvalue, left_bound, right_bound, block, has_let=False):
 		self.type = Statement.FOR

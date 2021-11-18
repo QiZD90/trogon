@@ -4,7 +4,8 @@ from state import *
 from lexer import *
 
 class ParseException(Exception):
-	pass
+	def __init__(self, errormsg, line):
+		Exception.__init__(self, f'line {line}: {errormsg}')
 
 class Parser:
 	final_tokentypes = [
@@ -38,7 +39,7 @@ class Parser:
 	def expect(self, type, s):
 		t = self.next()
 		if not t or t.type != type:
-			raise ParseException(f'line {self.line}: ' + s + f' got {t.type if t else None}')
+			raise ParseException(f'Expected {type} got {t.type if t else None}', self.line)
 
 		return t
 
@@ -115,7 +116,11 @@ class Parser:
 	def factor(self):
 		expression = self.cast()
 
-		tokens = (Token.SLASH, Token.STAR, Token.DOUBLE_SLASH, Token.PERCENT)
+		tokens = (
+			Token.SLASH, Token.STAR, Token.DOUBLE_SLASH, Token.PERCENT,
+			Token.SLASH_EQUAL, Token.STAR_EQUAL, Token.DOUBLE_SLASH_EQUAL,
+			Token.PERCENT_EQUAL)
+
 		while self.next_is(tokens):
 			expression = BinaryExpression(self.next().type, expression, self.cast())
 
@@ -123,7 +128,7 @@ class Parser:
 
 	def term(self):
 		expression = self.factor()
-		tokens = (Token.PLUS, Token.MINUS)
+		tokens = (Token.PLUS, Token.MINUS, Token.PLUS_EQUAL, Token.MINUS_EQUAL)
 		while self.next_is(tokens):
 			expression = BinaryExpression(self.next().type, expression, self.factor())
 
@@ -132,7 +137,7 @@ class Parser:
 	def shift(self):
 		expression = self.term()
 
-		tokens = (Token.SHL, Token.SHR)
+		tokens = (Token.SHL, Token.SHR, Token.SHL_EQUAL, Token.SHR_EQUAL)
 		while self.next_is(tokens):
 			expression = BinaryExpression(self.next().type, expression, self.term())
 
@@ -200,7 +205,7 @@ class Parser:
 			if self.next_is(Token.IDENTIFIER):
 				name = self.next().value
 			elif name_expected:
-				raise ParseException('Expected function name')
+				raise ParseException('Expected function name', self.line)
 
 			self.expect(Token.LEFT_PAREN, 'Expected (')
 			argnames = []
@@ -277,7 +282,7 @@ class Parser:
 		has_let = self.match(Token.LET)
 		lvalue = self.expression()
 		if not lvalue or not lvalue.type == Expression.LVALUE:
-			raise ParseException('Expected variable')
+			raise ParseException('Expected variable', self.line)
 
 		self.expect(Token.IN, 'Expected in')
 		left_bound = self.expression()
@@ -295,6 +300,14 @@ class Parser:
 
 		return ReturnStatement(self.expression())
 
+	def break_statement(self):
+		self.expect(Token.BREAK, 'Expected break')
+		return BreakStatement()
+
+	def continue_statement(self):
+		self.expect(Token.CONTINUE, 'Expected continue')
+		return ContinueStatement()
+
 	def statement(self, can_return_expr=False):
 		if self.next_is(Token.LET):
 			statement = self.let_statement()
@@ -308,7 +321,20 @@ class Parser:
 			return self.for_statement()
 
 		elif self.next_is(Token.RETURN):
-			return self.return_statement()
+			statement = self.return_statement()
+			self.expect(Token.SEMICOLON, 'Expected ;')
+			return statement
+
+		elif self.next_is(Token.BREAK):
+			statement = self.break_statement()
+			self.expect(Token.SEMICOLON, 'Expected ;')
+			return statement
+
+		elif self.next_is(Token.CONTINUE):
+			statement = self.continue_statement()
+			self.expect(Token.SEMICOLON, 'Expected ;')
+			return statement
+
 
 		elif self.next_is(Token.FUNCTION):
 			expression = self.funcdeclexpr()
@@ -316,7 +342,7 @@ class Parser:
 				return expression
 
 			if not expression.name:
-				raise ParseException('Expected function name')
+				raise ParseException('Expected function name', self.line)
 
 			return FunctionDeclarationStatement(expression)
 
@@ -347,4 +373,5 @@ class Parser:
 		statements = []
 		while self.peek() != None:
 			statements.append(self.statement())
+
 		return statements

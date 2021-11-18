@@ -52,6 +52,8 @@ class Token:
 	FALSE = 'FALSE'#86
 	FUNCTION = 'FUNCTION'#87
 	RETURN = 'RETURN'#88
+	BREAK = 'BREAK'
+	CONTINUE = 'CONTINUE'
 	LET = 'LET'#89
 	NOT = 'NOT'#91
 	AND = 'AND'#92 
@@ -97,7 +99,7 @@ class Lexer:
 		'let': Token.LET, 'not': Token.NOT, 'and': Token.AND,
 		'or': Token.OR, 'in': Token.IN, 'as': Token.AS,
 		'bool': Token.BOOL, 'string': Token.STRING, 'number': Token.NUMBER,
-		'nulltype': Token.NULLTYPE
+		'nulltype': Token.NULLTYPE, 'break': Token.BREAK, 'continue': Token.CONTINUE
 	}
 
 	keywords_values = {
