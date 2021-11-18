@@ -1,3 +1,8 @@
-for let i in 0..11 {
-	print(i);	
+let i = table();
+i['c'] = 3;
+
+for i['c'] in 0..11 {
+	print(i['c']);	
 }
+
+print(i);

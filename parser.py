@@ -282,7 +282,10 @@ class Parser:
 		has_let = self.match(Token.LET)
 		lvalue = self.expression()
 		if not lvalue or not lvalue.type == Expression.LVALUE:
-			raise ParseException('Expected variable', self.line)
+			raise ParseException('Expected lvalue', self.line)
+
+		if has_let and not isinstance(lvalue, VariableExpression):
+			raise ParseException('Expected VariableExpression', self.line)
 
 		self.expect(Token.IN, 'Expected in')
 		left_bound = self.expression()

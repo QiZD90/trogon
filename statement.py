@@ -111,12 +111,12 @@ class ForStatement(Statement):
 		if self.has_let:
 			state.register(self.lvalue.name, self.left_bound.evaluate())
 		else:
-			state.set(self.lvalue.name, self.left_bound.evaluate())
+			self.lvalue.assign(self.left_bound.evaluate())
 
-		counter = state.get(self.lvalue.name)
+		counter = self.lvalue.evaluate()
 		try:
 			while abs(counter.sub(self.right_bound.evaluate()).value) >= 1:
-				state.set(self.lvalue.name, counter)
+				self.lvalue.assign(counter)
 
 				try:
 					r = self.block.evaluate()
@@ -131,7 +131,7 @@ class ForStatement(Statement):
 			pass
 
 		finally:
-			state.end()
+			State.end()
 
 	def __init__(self, lvalue, left_bound, right_bound, block, has_let=False):
 		self.type = Statement.FOR
@@ -142,7 +142,7 @@ class ForStatement(Statement):
 		self.has_let = has_let
 
 	def __repr__(self):
-		return f'(FOR {self.lvalue.name}:={self.left_bound} to {self.right_bound} {self.block})'
+		return f'(FOR {self.lvalue}:={self.left_bound} to {self.right_bound} {self.block})'
 
 
 class FunctionDeclarationStatement(Statement):
