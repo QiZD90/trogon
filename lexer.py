@@ -281,6 +281,9 @@ class Lexer:
 							raise LexingException(f"Invalid digit '{self.peek2()}' while parsing base-16 number on line {self.line}")
 
 				while self.peek() in self.radix_digits[radix] + ['_', '.']: # TODO: fail on `2a` or `4__`
+					if self.peek() == '.' and self.peek2() == '.':
+						break
+
 					c = self.nextchar()
 
 					if c == '.':
@@ -292,7 +295,16 @@ class Lexer:
 					else:
 						tmp.append(c)
 
-				self.tokens.append(Token(Token.NUMBER_LITERAL, self.line, int(''.join(tmp), radix)))
+				value = 0
+				if not dot_found:
+					value = int(''.join(tmp), radix)
+				else:
+					if radix != 10:
+						raise LexingException('Float literals are only allowed for base-10')
+					value = float(''.join(tmp))
+
+				self.tokens.append(
+					Token(Token.NUMBER_LITERAL, self.line, value))
 
 			elif c in '\'"':
 				tmp = []
