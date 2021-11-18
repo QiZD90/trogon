@@ -361,7 +361,7 @@ class TrogonPrintFunction(TrogonCallable):
 	def call(self, arguments):
 		self.check_arity(arguments)
 
-		print(''.join(arguments[0].evaluate().to(TrogonString).value))
+		print(''.join(arguments[0].to(TrogonString).value))
 		return TrogonNull
 
 	def __init__(self):
@@ -389,7 +389,7 @@ class TrogonFunction(TrogonCallable):
 		State.set_state(state)
 
 		for i, argname in enumerate(self.argnames):
-			state.register(argname, arguments[i].evaluate())
+			state.register(argname, arguments[i])
 		
 		if self.name and self.name not in self.argnames:
 			state.register(self.name, self)
@@ -430,8 +430,8 @@ class TrogonRandomFunction(TrogonCallable):
 
 	def call(self, arguments):
 		self.check_arity(arguments)
-		x, y = [i.evaluate() for i in arguments]
-
+		x, y = arguments
+		
 		if x.type != TrogonObject.NUMBER or y.type != TrogonObject.NUMBER or\
 		   not isinstance(x.value, int) or not isinstance(y.value, int):
 			raise RuntimeException('Random takes 2 integer arguments')

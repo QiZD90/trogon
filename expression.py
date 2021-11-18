@@ -133,7 +133,7 @@ class CastExpression(Expression):
 
 class CallExpression(Expression):
 	def evaluate(self):
-		return self.expression.evaluate().call(self.arguments)
+		return self.expression.evaluate().call([x.evaluate() for x in self.arguments])
 
 	def __init__(self, expression, arguments=[]):
 		self.type = Expression.CALL
@@ -274,7 +274,7 @@ class BlockExpression(Expression):
 					s.interpret()
 
 			result = self.expression.evaluate() if self.expression else TrogonNull
-			
+
 		finally:
 			State.end()
 

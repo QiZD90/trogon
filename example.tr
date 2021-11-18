@@ -7,7 +7,7 @@ print('Factorial of 10:');
 function factr(n) {
 	# blocks are expressions and return the resulf of the last expression in them
 	# functions work the same way
-	if (n <= 1) { 1 } else { n * factr(n - 1) }
+	if n <= 1 { 1 } else { n * factr(n - 1) }
 }
 print(factr(10));;
 
