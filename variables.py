@@ -60,6 +60,15 @@ class TrogonObject:
 		self.type = type
 		self.value = value
 
+	def __hash__(self):
+		return hash((self.type, self.value))
+
+	def __eq__(self, x):
+		if self is x:
+			return TrogonTrue
+
+		return self.equal(x).value
+
 	def __repr__(self):
 		return f'<{self.type}>'
 
@@ -253,6 +262,9 @@ class TrogonString(TrogonObject):
 	def __init__(self, value=None):
 		self.value = [x for x in value] if value else []
 
+	def __hash__(self):
+		return hash(''.join(self.value))
+
 
 class TrogonTable(TrogonObject):
 	type = TrogonObject.TABLE
@@ -262,12 +274,13 @@ class TrogonTable(TrogonObject):
 		return TrogonNull
 
 	def remove(self, arguments):
-		index = arguments[0]
+		key = arguments[0]
 
-		for key in self.value.keys():
-			if key.equal(index).value:
-				del self.value[key]
-				break
+		if key.type == TrogonObject.TABLE:
+			raise RuntimeException('Tables can\'t be table keys')
+
+		if key in self.value:
+			del self.value[key]
 
 		return TrogonNull
 
@@ -277,26 +290,25 @@ class TrogonTable(TrogonObject):
 		if argument == 'remove':
 			return TrogonCallable(1, lambda x: self.remove(x))
 		if argument == 'length':
-			return TrogonCallable(0, lambda _: len(self.value))
+			return TrogonCallable(0, lambda _: TrogonNumber(len(self.value)))
 
 		TrogonObject.dot(self, argument)
 
 	def subscript(self, index):
-		# TODO: O(n) lookup time defeats the purpose of a table
-		for key in self.value.keys():
-			if key.equal(index).value:
-				return self.value[key]
+		if index.type == TrogonObject.TABLE:
+			raise RuntimeException('Can\'t subscript tables with tables!')
+
+		if index in self.value:
+			return self.value[index]
 
 		return TrogonNull
 
 	def subscript_assign(self, index, value):
+		if index.type == TrogonObject.TABLE:
+			raise RuntimeException('Can\'t subscript tables with tables!')
+
 		v = copy.deepcopy(value) if value.type in types_passed_by_value else copy.copy(value)
-		for key in self.value.keys():
-			if key.equal(index).value:
-				self.value[key] = v
-				break
-		else:
-			self.value[index] = v
+		self.value[index] = v
 		return self 
 
 	def equal(self, y):
@@ -306,12 +318,8 @@ class TrogonTable(TrogonObject):
 		if len(self.value) != len(y.value):
 			return TrogonFalse
 
-		# TODO: wow this is straight up awful
-		for key, value in self.value.items():
-			for key2, value2 in y.value.items():
-				if key.equal(key2).value and value.equal(value2).value:
-					break
-			else:
+		for k, v in self.value.items():
+			if k not in y.value or v != y.value[k]:
 				return TrogonFalse
 
 		return TrogonTrue
@@ -320,12 +328,28 @@ class TrogonTable(TrogonObject):
 		if o == TrogonTable:
 			return self
 
-		elif o == TrogonString:
-			# TODO: recursive tables
-			return TrogonString('{' + ', '.join([f'{"".join(k.to(TrogonString).value)}: {"".join(v.to(TrogonString).value)}' for k, v in self.value.items()]) + '}')
+		elif o == TrogonString: # TODO: cross referencing table
+			pairs = []
+			for key in self.value:
+				key_string = ''.join(key.to(TrogonString).value)
+				if key.type == TrogonObject.STRING:
+					key_string = "'" + key_string + "'"
+
+				value = self.value[key]
+				value_string = None
+				if self == value:
+					value_string = r'{...}'
+				else:
+					value_string = ''.join(value.to(TrogonString).value)
+					if value.type == TrogonObject.STRING:
+						value_string = "'" + value_string + "'"
+
+				pairs.append(key_string + ': ' + value_string)
+
+			return TrogonString('{' + ', '.join(pairs) + '}')
 
 		elif o == TrogonBool:
-			return TrogonBool(self.value)
+			return TrogonTrue if len(self.value) > 0 else TrogonFalse
 
 		return TrogonObject.to(self, o)
 
@@ -347,7 +371,7 @@ class TrogonCallable(TrogonObject):
 			raise RuntimeException(
 				f'Expected {self.arity} arguments, got {len(arguments)}')
 
-		return self.function([x.evaluate() for x in arguments])
+		return self.function(arguments)
 
 	def to(self, o):
 		if o == TrogonCallable:
@@ -428,6 +452,9 @@ class TrogonFunction(TrogonCallable):
 			State.set_state(state_previous)
 
 		return result
+
+	def __hash__(self):
+		return hash((self.arity, self.block))
 
 	def __init__(self, arity, name, argnames, block):
 		self.arity = arity
