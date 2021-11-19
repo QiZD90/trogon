@@ -92,6 +92,12 @@ class TrogonNullType(TrogonObject):
 	def __init__(self):
 		self.value = None
 
+	def equal(self, y):
+		if y.type != TrogonObject.NULL:
+			return TrogonFalse
+
+		return TrogonTrue
+
 TrogonNull = TrogonNullType()
 
 
@@ -440,6 +446,24 @@ class TrogonPrintFunction(TrogonCallable):
 
 	def __init__(self):
 		self.arity = 1
+
+
+class TrogonPrintFormattedFunction(TrogonCallable):
+	type = TrogonObject.FUNCTION
+
+	def equal(self, y):
+		return TrogonTrue if isinstance(y, TrogonPrintFormattedFunction) else TrogonFalse
+
+	def call(self, arguments):
+		self.check_arity(arguments)
+
+		pattern, table = arguments
+		print(''.join(pattern.format([table]).to(TrogonString).value), end='')
+		return TrogonNull
+
+	def __init__(self):
+		self.arity = 2
+
 
 class TrogonInputFunction(TrogonCallable):
 	type = TrogonObject.FUNCTION

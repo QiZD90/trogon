@@ -84,7 +84,7 @@ class Parser:
 
 			self.expect(Token.RIGHT_BRACE, 'Expected }')
 			return TableLiteralExpression({k: v for (k, v) in arguments})
-			
+
 		if self.next_is(Parser.final_tokentypes):
 			return LiteralExpression(self.next().value)
 
@@ -124,7 +124,9 @@ class Parser:
 
 	def unary(self):
 		if self.match(Token.MINUS):
-			return UnaryExpression(Token.MINUS, self.final())
+			return UnaryExpression(Token.MINUS, self.call_path_sub())
+		elif self.match(Token.NOT):
+			return UnaryExpression(Token.NOT, self.call_path_sub())
 
 		return self.call_path_sub()
 

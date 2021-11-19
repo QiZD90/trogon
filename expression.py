@@ -161,7 +161,8 @@ class CallExpression(Expression):
 
 class UnaryExpression(Expression):
 	functions = {
-		Token.MINUS: lambda x: x.evaluate().unary_minus()
+		Token.MINUS: lambda x: x.evaluate().unary_minus(),
+		Token.NOT: lambda x: TrogonFalse if x.evaluate().to(TrogonBool).value else TrogonTrue
 	}
 
 	def evaluate(self):

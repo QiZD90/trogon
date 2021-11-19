@@ -8,6 +8,7 @@ from variables import *
 from state import global_state
 
 global_state.register('print', TrogonPrintFunction())
+global_state.register('printf', TrogonPrintFormattedFunction())
 global_state.register('input', TrogonInputFunction())
 global_state.register('random', TrogonRandomFunction())
 

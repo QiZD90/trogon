@@ -1,9 +1,9 @@
-let pattern = '{greeting}, {name}!';
-print(pattern.format(table{'greeting': 'Hello', 'name': 'QiZD90'}));
+let pattern = '{greeting}, {name}!\n';
+printf(pattern, table{'greeting': 'Hello', 'name': 'QiZD90'});
 
-pattern = '{}';
-print(pattern.format(table{}));
-print(pattern.format(table{'': 77}));
+pattern = '{}\n';
+printf(pattern, table{});
+printf(pattern, table{'': 77});
 
 pattern = '{first_part} {second_part}';
 let str =
@@ -13,3 +13,5 @@ let str =
 		table{'a': 13, 'b': 37, 'c': 11, 'd': '00'}
 	);
 print(str);
+
+printf('{test}\n', table{'test': 'yeah'});
