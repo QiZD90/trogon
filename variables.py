@@ -1,5 +1,6 @@
 from runtime import *
 from state import *
+from lexer import *
 import copy
 import random
 
@@ -187,9 +188,44 @@ class TrogonNumber(TrogonObject):
 class TrogonString(TrogonObject):
 	type = TrogonObject.STRING
 
+	# TODO: this needs a proper lexer and parser
+	# TODO: some way to escape braces?
+	def format(self, arguments):
+		table = arguments[0]
+		if table.type != TrogonObject.TABLE:
+			raise RuntimeException('Expected table as an argument to string.format')
+
+		pos = 0
+		result = []
+		while pos < len(self.value):
+			char = self.value[pos]
+			if char == '{':
+				argname = []
+				pos += 1
+				while pos < len(self.value) and self.value[pos] != '}':
+					if self.value[pos] == '{':
+						raise RuntimeException('Unexpected { in a format pattern')
+					argname.append(self.value[pos])
+					pos += 1
+
+				if self.value[pos] != '}':
+					raise RuntimeException('Expected } in a format pattern')
+
+				s = ''.join(table.subscript(TrogonString(argname)).to(TrogonString).value)
+				result.append(s)
+			elif char == '}':
+				raise RuntimeException('Unexpected } in a format pattern')
+			else:
+				result.append(char)
+			pos += 1
+
+		return TrogonString(''.join(result))
+
 	def dot(self, argument):
 		if argument == 'length':
 			return TrogonCallable(0, lambda _: TrogonNumber(len(self.value)))
+		if argument == 'format':
+			return TrogonCallable(1, lambda x: self.format(x))
 
 		return TrogonObject.dot(self, argument)
 

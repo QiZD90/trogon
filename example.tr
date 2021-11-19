@@ -81,7 +81,7 @@ if choice == 'cat' {
 	animal = new_dog();
 }
 
-print(animal['breed'] + ' aged ' + animal['age'] as string + ' says:');
+print('{breed} aged {age} says:'.format(animal));
 animal['say']();
 
 
